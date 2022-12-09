@@ -10,8 +10,8 @@ We would like to view cars or trucks depending on user preference. If a user pre
 
 ### Links and Resources
 
-- [ci/cd]() (GitHub Actions)
-- [server-prod]()
+- [ci/cd](https://github.com/d49-lab-09/cars-trucks-api/actions) (GitHub Actions)
+- [server-prod](https://d49-cars-trucks.onrender.com/)
 
 ### Setup
 
