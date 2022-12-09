@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const { cars } = require('../models');
 
 
 const carsRouter = express.Router();
@@ -8,24 +9,40 @@ const carsRouter = express.Router();
 
 carsRouter.route('/cars')
   .post(create)
-  .get(read)
+  .get(read);
+carsRouter.route('/cars/:id')
   .put(update)
-  .delete(destroy);
+  .delete(destroy)
+  .get(readOne);
 
-function read(req, res, next) {
-  res.status(200).send('proof of life read');
+async function read(req, res) {
+  const allCars = await cars.read();
+  res.status(200).send(allCars);
 }
 
-function create(req, res, next) {
-  res.status(201).send('proof of life create');
+async function create(req, res) {
+  const car = await cars.create(req.body);
+  console.log(car);
+  res.status(201).send(car);
 }
 
-function update(req, res, next) {
-  res.status(200).send('proof of life update');
+async function update(req, res, next) {
+  const id = req.params.id;
+  await cars.update(req.body, id);
+  const getUpdate = await cars.read(id);
+  res.status(200).send(getUpdate);
 }
 
-function destroy(req, res, next) {
-  res.status(204).send('proof of life destroy');
+async function destroy(req, res, next) {
+  await cars.delete(req.params.id);
+  res.status(204).send();
+
+}
+
+async function readOne(req, res, next) {
+  const car = await cars.read(req.params.id);
+  res.status(204).send(car);
+
 }
 
 
