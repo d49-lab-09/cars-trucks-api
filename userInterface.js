@@ -10,10 +10,10 @@ const user = ['read', 'read all', 'exit'];
 
 
 
-async function crudStuff(rolePermissions) {
-
+async function crudStuff(rolePermissions, userData) {
+  const inquirerRunning = true;
   try {
-    while (true) {
+    while (inquirerRunning) {
 
       const continueCrud = await inquirer
         .prompt([
@@ -46,7 +46,7 @@ async function crudStuff(rolePermissions) {
       } else if (pickCrud.pickCrud === 'delete') {
         console.log('you chose delete');
       } else if (pickCrud.pickCrud === 'read all') {
-        console.log('you chose read all');
+        getVehicle(userData)
       } else {
         break;
       }
@@ -59,15 +59,34 @@ async function crudStuff(rolePermissions) {
 
 
 
+async function getVehicle(userData) {
+  const { token, vehicleType } = userData;
+
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
+  const data = await axios.get(`http://localhost:3001/${vehicleType}s`, config);
+  console.log(data);
+}
 
 
+async function getCars(userData) {
+  const { token } = userData;
 
-async function getCars(config) {
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
   const data = await axios.get('http://localhost:3001/cars', config);
   console.log(data);
 }
 
-async function getTrucks(config) {
+async function getTrucks(userData) {
+  const { token } = userData;
+
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
+
   const data = await axios.get('http://localhost:3001/trucks', config);
   console.log(data);
 }
@@ -84,12 +103,20 @@ async function performLogin(loginData) {
   return data;
 }
 
-function performSignup(loginData) {
-  console.log(loginData);
+async function performSignup(loginData) {
+  const url = 'http://localhost:3001/signup';
+  const data = await axios.post(url, {
+    username: loginData.username,
+    password: loginData.password,
+    vehicleType: loginData.vehicleType.toLowerCase(),
+  });
+  console.log(data);
+  return data;
 }
 
-async function afterLogin(role) {
-  if (role === 'admin') {
+async function afterLogin(userData, rolePermissions) {
+  if (userData.role === 'admin') {
+    console.log('ADMIN MENU');
     const nextStepsAdmin = await inquirer
       .prompt([
         {
@@ -102,57 +129,64 @@ async function afterLogin(role) {
     if (nextStepsAdmin.choice === 'Exit') {
       return;
     } else if (nextStepsAdmin.choice === 'Access User Data') {
-      adminUser();
+      adminUser(userData);
     } else if (nextStepsAdmin.choice === 'Access Truck Data') {
-      getTrucks();
+      getTrucks(userData);
     } else if (nextStepsAdmin.choice === 'Access Car Data') {
-      getCars();
+      getCars(userData);
     }
-
   } else {
-    await crudStuff(rolePermissions);
+    await crudStuff(rolePermissions, userData);
   }
 }
 
-function getUsers() {
-  console.log('axios will get all users');
+async function getUsers(userData) {
+  const { token } = userData;
+
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
+
+  const data = await axios.get('http://localhost:3001/users', config);
+  console.log(data);
+  adminUser(userData);
 }
 
-function getOneUser() {
-  console.log('axios will get all users');
+async function getOneUser(userData) {
+  console.log('axios will get one users');
 }
 
-function deleteUser() {
+async function deleteUser(userData) {
   console.log('axios will delete users');
 }
 
-function updateUser() {
+async function updateUser(userData) {
   console.log('axios will update users');
 }
 
 
 
-async function adminUser() {
+async function adminUser(userData) {
   const userQs = await inquirer
     .prompt([
       {
         type: 'list',
         name: 'users',
         message: 'Please choose an option.',
-        choices: ['Get Users', 'Delete User', 'Update User', 'Search One User', 'Exit'],
+        choices: ['Get Users', 'Delete User', 'Update User', 'Get One User', 'Exit'],
       },
     ]);
 
   if (userQs.users === 'Exit') {
     return;
   } else if (userQs.users === 'Get Users') {
-    getUsers();
+    getUsers(userData);
   } else if (userQs.users === 'Delete User') {
-    deleteUser();
+    deleteUser(userData);
   } else if (userQs.users === 'Update User') {
-    updateUser();
+    updateUser(userData);
   } else if (userQs.users === 'Search One User') {
-    getOneUser();
+    getOneUser(userData);
   }
 }
 
@@ -183,20 +217,22 @@ async function startScript() {
         },
       ]);
 
-    const userData = await performLogin(loginData);
-    let role = userData.data.role;
-    let token = userData.data.token;
-    console.log(role, token);
+    const userDataResponse = await performLogin(loginData);
+
+    const userData = {
+      vehicleType: userDataResponse.data.vehicleType,
+      role: userDataResponse.data.role,
+      token: userDataResponse.data.token,
+    };
     let rolePermissions;
-    if (role === 'admin') {
+    if (userData.role === 'admin') {
       rolePermissions = admin;
-    } else if (role === 'user') {
+    } else if (userData.role === 'user') {
       rolePermissions = user;
     }
 
+    await afterLogin(userData, rolePermissions);
 
-    await afterLogin(role);
-    await crudStuff(rolePermissions);
 
   } else if (loginQuestion.start === 'Signup') {
     const loginData = await inquirer
@@ -209,7 +245,7 @@ async function startScript() {
         {
           type: 'password',
           name: 'password',
-          message: 'What is your username?',
+          message: 'What is your password?',
         },
         {
           type: 'list',
@@ -218,24 +254,24 @@ async function startScript() {
           choices: ['Car', 'Truck'],
         },
       ]);
-    await performSignup(loginData);
-    await crudStuff(rolePermissions);
+
+    const userDataResponse = await performSignup(loginData);
+
+    const userData = {
+      vehicleType: userDataResponse.data.vehicleType,
+      role: userDataResponse.data.role,
+      token: userDataResponse.data.token,
+    };
+    let rolePermissions;
+    if (userData.role === 'admin') {
+      rolePermissions = admin;
+    } else if (userData.role === 'user') {
+      rolePermissions = user;
+    }
+    await crudStuff(rolePermissions, userData);
   }
 
 }
 
 startScript();
 
-// const config = {
-//   headers: { Authorization: `Bearer ${token}` }
-// };
-
-// const bodyParameters = {
-//  key: "value"
-// };
-
-// Axios.post( 
-// 'http://localhost:8000/api/v1/get_token_payloads',
-// bodyParameters,
-// config
-// ).then(console.log).catch(console.log);
