@@ -16,7 +16,8 @@ userRouter.route('/signin')
   .post(basicAuth, login);
 
 userRouter.route('/users')
-  .get(bearAuth, acl('delete'), usersRoute)
+  .get(bearAuth, acl('delete'), usersRoute);
+userRouter.route('/users/:id')
   .get(bearAuth, acl('delete'), readOne)
   .put(bearAuth, acl('delete'), update)
   .delete(bearAuth, acl('delete'), destroy);
@@ -52,21 +53,37 @@ async function usersRoute(req, res, next) {
 
 
 async function update(req, res, next) {
-  const id = req.params.id;
-  await users.update(req.body, id);
-  const getUpdate = await users.read(id);
-  res.status(200).send(getUpdate);
+  try {
+    const id = req.params.id;
+    await users.update(req.body, { where: { id } });
+    const getUpdate = await users.findOne({ where: { id } });
+    res.status(200).send(getUpdate);
+  } catch (e) {
+    next(e.message);
+  }
+
 }
 
 async function destroy(req, res, next) {
-  await users.delete(req.params.id);
-  res.status(204).send();
+  try {
+    const id = req.params.id;
+    await users.destroy({ where: id });
+    res.status(204).send();
+  } catch (e) {
+    next(e.message);
+  }
+
 
 }
 
 async function readOne(req, res, next) {
-  const oneUser = await users.read(req.params.id);
-  res.status(200).send(oneUser);
+  try {
+    const oneUser = await users.read(req.params.id);
+    res.status(200).send(oneUser);
+  } catch (e) {
+    next(e.message);
+  }
+
 }
 
 module.exports = userRouter;
