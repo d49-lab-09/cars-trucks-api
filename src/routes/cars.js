@@ -2,20 +2,21 @@
 
 const express = require('express');
 const { cars } = require('../models');
-
-
+const bearAuth = require('../middleware/auth/bearer');
+const carChecker = require('../middleware/auth/carMiddleware');
 const carsRouter = express.Router();
 
 
 carsRouter.route('/cars')
-  .post(create)
-  .get(read);
+  .post(bearAuth, carChecker, create)
+  .get(bearAuth, carChecker, read);
 carsRouter.route('/cars/:id')
-  .put(update)
-  .delete(destroy)
-  .get(readOne);
+  .put(bearAuth, carChecker, update)
+  .delete(bearAuth, carChecker, destroy)
+  .get(bearAuth, carChecker, readOne);
 
-async function read(req, res) {
+async function read(req, res, next) {
+
   const allCars = await cars.read();
   res.status(200).send(allCars);
 }
@@ -41,7 +42,7 @@ async function destroy(req, res, next) {
 
 async function readOne(req, res, next) {
   const car = await cars.read(req.params.id);
-  res.status(204).send(car);
+  res.status(200).send(car);
 
 }
 
