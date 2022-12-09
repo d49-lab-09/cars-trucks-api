@@ -2,8 +2,8 @@
 const { app } = require('../src/server');
 const supertest = require('supertest');
 const request = supertest(app);
-const { db } = require('../src/auth/models');
-const { users } = require('../src/auth/models');
+const { db } = require('../src/models');
+const { users } = require('../src/models');
 
 
 beforeAll(async () => {
@@ -24,3 +24,8 @@ afterAll(async () => {
   await db.drop();
 });
 
+describe('Test of API', () => {
+  test('should see proof of life when connecting', () => {
+    console.log('tests');
+  });
+});
