@@ -33,7 +33,7 @@ class DataCollection {
   async update(body, id) {
     try {
       await this.model.update(body, { where: { id } });
-      let record = await this.model.findOne(id);
+      let record = await this.model.findOne({ where: { id } });
       return record;
     } catch (err) {
       console.error('This error is on ModelInterface ', err.message);

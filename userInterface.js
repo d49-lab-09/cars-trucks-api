@@ -1,7 +1,6 @@
 'use strict';
 const axios = require('axios');
 const inquirer = require('inquirer');
-const base64 = require('base-64');
 
 
 const admin = ['create', 'read', 'read all', 'update', 'delete', 'exit'];
@@ -10,7 +9,15 @@ const user = ['read', 'read all', 'exit'];
 
 
 
-async function crudStuff(rolePermissions, userData) {
+async function crudStuff(rolePermissions, userData, carsOrTrucks = '') {
+  let category = userData.vehicleType;
+  if (userData.role === 'admin') {
+    category = carsOrTrucks;
+  } else {
+    console.log();
+    console.log();
+    console.log(`${category.toUpperCase()} MENU`);
+  }
   const inquirerRunning = true;
   try {
     while (inquirerRunning) {
@@ -20,7 +27,7 @@ async function crudStuff(rolePermissions, userData) {
           {
             type: 'list',
             name: 'continue',
-            message: 'Would you like to perform a CRUD function?',
+            message: `Would you like to interface with ${category}s?`,
             choices: ['yes', 'no'],
           },
         ]);
@@ -46,7 +53,7 @@ async function crudStuff(rolePermissions, userData) {
       } else if (pickCrud.pickCrud === 'delete') {
         console.log('you chose delete');
       } else if (pickCrud.pickCrud === 'read all') {
-        getVehicle(userData)
+        getVehicle(userData);
       } else {
         break;
       }
@@ -60,7 +67,7 @@ async function crudStuff(rolePermissions, userData) {
 
 
 async function getVehicle(userData) {
-  const { token, vehicleType } = userData;
+  let { token, vehicleType } = userData;
 
   const config = {
     headers: { Authorization: `Bearer ${token}` },
@@ -131,9 +138,9 @@ async function afterLogin(userData, rolePermissions) {
     } else if (nextStepsAdmin.choice === 'Access User Data') {
       adminUser(userData);
     } else if (nextStepsAdmin.choice === 'Access Truck Data') {
-      getTrucks(userData);
+      await crudStuff(rolePermissions, userData, 'truck');
     } else if (nextStepsAdmin.choice === 'Access Car Data') {
-      getCars(userData);
+      await crudStuff(rolePermissions, userData, 'car');
     }
   } else {
     await crudStuff(rolePermissions, userData);

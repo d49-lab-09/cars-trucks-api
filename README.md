@@ -32,14 +32,16 @@ see `.env.sample`
 - `/signin` : POST - login as user
 - `/signup` : POST - create one user
 - `/users` : GET - Read all usernames
+- `/users` : GET - Read all usernames
+- `/users` : GET - Read all usernames
 - `/cars` : GET - Read all cars
 - `/trucks` : GET - Read all trucks
 - `/cars` : POST - Create one cars
 - `/trucks` : POST - Create one trucks
-- `/cars` : PUT - Update one cars
-- `/trucks` : PUT - Update one trucks
-- `/cars` : DELETE - Delete one cars
-- `/trucks` : DELETE - Delete one trucks
+- `/cars/:id` : PUT - Update one cars
+- `/trucks/:id` : PUT - Update one trucks
+- `/cars/:id` : DELETE - Delete one cars
+- `/trucks/:id` : DELETE - Delete one trucks
 
 #### Tests
 
