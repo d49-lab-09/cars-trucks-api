@@ -67,7 +67,7 @@ async function crudStuff(rolePermissions, userData, carsOrTrucks = '') {
 
 
 async function getVehicle(userData) {
-  const { token, vehicleType } = userData;
+  let { token, vehicleType } = userData;
 
   const config = {
     headers: { Authorization: `Bearer ${token}` },
