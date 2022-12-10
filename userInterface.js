@@ -3,8 +3,9 @@ const axios = require('axios');
 const inquirer = require('inquirer');
 
 
-const admin = ['create', 'read', 'read all', 'update', 'delete', 'exit'];
-const user = ['read', 'read all', 'exit'];
+const admin = ['create', 'get one', 'get all', 'update', 'delete', 'exit'];
+const user = ['get one', 'get all', 'update', 'create', 'exit'];
+const guest = ['get one', 'get all', 'exit'];
 
 
 
@@ -31,7 +32,13 @@ async function crudStuff(rolePermissions, userData, carsOrTrucks = '') {
             choices: ['yes', 'no'],
           },
         ]);
-      if (continueCrud.continue === 'no') { return await afterLogin(userData, rolePermissions); }
+      if (continueCrud.continue === 'no') {
+        if (userData.role === 'admin') {
+          return await afterLogin(userData, rolePermissions);
+        } else {
+          return;
+        }
+      }
 
 
       const pickCrud = await inquirer
@@ -46,17 +53,18 @@ async function crudStuff(rolePermissions, userData, carsOrTrucks = '') {
 
       if (pickCrud.pickCrud === 'create') {
         console.log('you chose create');
-      } else if (pickCrud.pickCrud === 'read') {
-        console.log('you chose read');
+      } else if (pickCrud.pickCrud === 'get one') {
+        await getVehicle(userData, category, true, rolePermissions);
+        return await afterLogin(userData, rolePermissions);
       } else if (pickCrud.pickCrud === 'update') {
-        console.log('you chose read');
+        await updateVehicle(userData, category, rolePermissions);
       } else if (pickCrud.pickCrud === 'delete') {
         console.log('you chose delete');
-      } else if (pickCrud.pickCrud === 'read all') {
-        await getVehicle(userData, category);
+      } else if (pickCrud.pickCrud === 'get all') {
+        await getVehicle(userData, category, false, rolePermissions);
         return await afterLogin(userData, rolePermissions);
       } else {
-        break;
+        return await afterLogin(userData, rolePermissions);
       }
     }
 
@@ -67,18 +75,92 @@ async function crudStuff(rolePermissions, userData, carsOrTrucks = '') {
 
 
 
-async function getVehicle(userData, category) {
+async function getVehicle(userData, category, getOne = false, rolePermissions) {
   const { token } = userData;
 
   const config = {
     headers: { Authorization: `Bearer ${token}` },
   };
   const data = await axios.get(`http://localhost:3001/${category}s`, config);
-  console.log(data.data);
+  if (!getOne) return console.log(data.data);
+  const vehicles = data.data.map(vehicle => `${vehicle.id}. Make: ${vehicle.make}
+     Model: ${vehicle.model}`);
+
+  vehicles.push('exit');
+  const whichVehicle = await inquirer
+    .prompt([
+      {
+        type: 'list',
+        name: `vehicle`,
+        message: 'Please choose an option',
+        choices: vehicles,
+      },
+    ]);
+
+
+  if (whichVehicle.vehicle === 'exit') return;
+
+  const id = whichVehicle.vehicle.split('.').at(0);
+
+  const oneVehicle = await axios.get(`http://localhost:3001/${category}s/${id}`, config);
+  console.log(oneVehicle.data);
 }
 
 
+async function updateVehicle(userData, category) {
+  const { token } = userData;
+
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
+  const data = await axios.get(`http://localhost:3001/${category}s`, config);
+
+  const vehicles = data.data.map(vehicle => `${vehicle.id}. Make: ${vehicle.make}
+     Model: ${vehicle.model}`);
+
+  vehicles.push('exit');
+  const whichVehicle = await inquirer
+    .prompt([
+      {
+        type: 'list',
+        name: `vehicle`,
+        message: 'Which vehicle would you like to update?',
+        choices: vehicles,
+      },
+    ]);
+
+
+  if (whichVehicle.vehicle === 'exit') return;
+
+  const id = whichVehicle.vehicle.split('.').at(0);
+  console.log();
+  console.log(whichVehicle.vehicle + ': currently selected for update');
+  const newData = await inquirer
+    .prompt([
+      {
+        type: 'input',
+        name: 'make',
+        message: 'Please input a new "make"',
+      },
+      {
+        type: 'input',
+        name: 'model',
+        message: 'Please input a new "model"',
+      },
+    ]);
+
+  const body = {
+    make: newData.make,
+    model: newData.model,
+    type: category,
+  };
+  const updatedVehicle = await axios.put(`http://localhost:3001/${category}s/${id}`, body, config);
+
+  console.log(updatedVehicle.data);
+}
+
 async function performLogin(loginData) {
+
   const url = 'http://localhost:3001/signin';
   const data = await axios.post(url, {}, {
     auth: {
@@ -261,7 +343,7 @@ async function updateUser(userData) {
       type: 'list',
       name: 'role',
       message: `What will ${userToUpdate.user}'s role be?`,
-      choices: ['user', 'admin'],
+      choices: ['user', 'guest', 'admin'],
     },
     {
       type: 'list',
@@ -282,7 +364,35 @@ async function updateUser(userData) {
   return await afterLogin(userData, admin);
 }
 
+async function guestLogin() {
+  const carsOrTrucks = await inquirer
+    .prompt([
+      {
+        type: 'list',
+        name: 'choice',
+        message: 'Do you want to view cars or trucks?',
+        choices: ['Cars', 'Trucks'],
+      },
+    ]);
 
+  if (carsOrTrucks.choice === 'Cars') {
+    const loginData = {
+      username: 'guestCar',
+      password: 'password7',
+    };
+    const userData = await performLogin(loginData);
+
+    await afterLogin(userData.data, guest);
+  } else {
+    const loginData = {
+      username: 'guestTruck',
+      password: 'password7',
+    };
+    const userData = await performLogin(loginData);
+    await afterLogin(userData.data, guest);
+  }
+
+}
 
 async function adminUser(userData) {
   const userQs = await inquirer
@@ -298,11 +408,11 @@ async function adminUser(userData) {
   if (userQs.users === 'Exit') {
     return;
   } else if (userQs.users === 'Get Users') {
-    getUsers(userData);
+    await getUsers(userData);
   } else if (userQs.users === 'Delete User') {
-    deleteUser(userData);
+    await deleteUser(userData);
   } else if (userQs.users === 'Update User') {
-    updateUser(userData);
+    await updateUser(userData);
   } else if (userQs.users === 'Get One User') {
     await getOneUser(userData);
   }
@@ -315,10 +425,10 @@ async function startScript() {
         type: 'list',
         name: 'start',
         message: 'Please choose an option.',
-        choices: ['Login', 'Signup', 'Exit'],
+        choices: ['Login', 'Signup', 'View Application', 'Exit'],
       },
     ]);
-  if (loginQuestion.start === 'exit') {
+  if (loginQuestion.start === 'Exit') {
     return;
   } else if (loginQuestion.start === 'Login') {
     const loginData = await inquirer
@@ -347,6 +457,8 @@ async function startScript() {
       rolePermissions = admin;
     } else if (userData.role === 'user') {
       rolePermissions = user;
+    } else if (userData.role === 'guest') {
+      rolePermissions = guest;
     }
 
     await afterLogin(userData, rolePermissions);
@@ -358,12 +470,12 @@ async function startScript() {
         {
           type: 'input',
           name: 'username',
-          message: 'Please choose your username?',
+          message: 'Please choose your username.',
         },
         {
           type: 'password',
           name: 'password',
-          message: 'What is your password?',
+          message: 'Choose a your password.',
         },
         {
           type: 'list',
@@ -387,6 +499,8 @@ async function startScript() {
       rolePermissions = user;
     }
     await crudStuff(rolePermissions, userData);
+  } else if (loginQuestion.start === 'View Application') {
+    guestLogin();
   }
 
 }
