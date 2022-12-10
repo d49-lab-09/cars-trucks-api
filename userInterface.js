@@ -139,15 +139,138 @@ async function getUsers(userData) {
 }
 
 async function getOneUser(userData) {
-  console.log('axios will get one users');
-}
+  const { token } = userData;
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
+  const data = await axios.get('http://localhost:3001/users', config);
+  const userIds = data.data.map(users => ({
+    [users.username]: users.id,
+  }));
+  console.log('Enter "exit" to go back to main menu');
+  const userToFind = await inquirer
+    .prompt([{
+      type: 'input',
+      name: 'user',
+      message: 'Enter username to search.',
+    }]);
 
+  if (userToFind.user.toLocaleLowerCase() === 'exit') return await afterLogin(userData, admin);
+
+  const foundUser = userIds.filter(user => {
+    return Object.keys(user)[0].toLocaleLowerCase() === userToFind.user.toLocaleLowerCase();
+  });
+  if (!foundUser.length) {
+    console.log(`${userToFind.user} not found!`);
+    return await getOneUser(userData);
+  }
+  const [id] = Object.values(foundUser[0]);
+
+  const gotOne = await axios.get(`http://localhost:3001/users/${id}`, config);
+  console.log();
+  console.log();
+  console.log(gotOne.data);
+  console.log();
+  return await afterLogin(userData, admin);
+}
 async function deleteUser(userData) {
-  console.log('axios will delete users');
-}
+  const { token } = userData;
 
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
+
+  const data = await axios.get('http://localhost:3001/users', config);
+  const userNames = data.data.map(users => users.username);
+  const userIds = data.data.map(users => ({
+    [users.username]: users.id,
+  }));
+
+  userNames.push('Exit');
+  const userToDelete = await inquirer
+    .prompt([{
+      type: 'list',
+      name: 'user',
+      message: 'Please choose an user to delete.',
+      choices: userNames,
+    }]);
+
+  if (userToDelete.user === 'Exit') return await afterLogin(userData, admin);
+  const foundUser = userIds.filter(user => {
+    return Object.keys(user)[0] === userToDelete.user;
+
+  });
+  const [id] = Object.values(foundUser[0]);
+
+  const status = await axios.delete(`http://localhost:3001/users/${id}`, config);
+  console.log();
+  console.log();
+  console.log(status.data.status);
+  console.log();
+  console.log(userToDelete.user, 'has been successfully updated');
+  console.log();
+  console.log();
+  return await afterLogin(userData, admin);
+}
 async function updateUser(userData) {
-  console.log('axios will update users');
+
+  const { token } = userData;
+
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
+
+  const data = await axios.get('http://localhost:3001/users', config);
+  const userNames = data.data.map(users => users.username);
+  const userIds = data.data.map(users => ({
+    [users.username]: users.id,
+  }));
+
+  userNames.push('Exit');
+  const userToUpdate = await inquirer
+    .prompt([{
+      type: 'list',
+      name: 'user',
+      message: 'Please choose an option.',
+      choices: userNames,
+    }]);
+
+  if (userToUpdate.user === 'Exit') return await afterLogin(userData, admin);
+  const foundUser = userIds.filter(user => {
+    return Object.keys(user)[0] === userToUpdate.user;
+
+  });
+  const [id] = Object.values(foundUser[0]);
+
+  const body = await inquirer
+    .prompt([{
+      type: 'input',
+      name: 'username',
+      message: `What will ${userToUpdate.user}'s name be?`,
+    },
+    {
+      type: 'list',
+      name: 'role',
+      message: `What will ${userToUpdate.user}'s role be?`,
+      choices: ['user', 'admin'],
+    },
+    {
+      type: 'list',
+      name: 'vehicleType',
+      message: `What will ${userToUpdate.user}'s vehicle type be?`,
+      choices: ['car', 'truck', 'both'],
+    },
+    ]);
+
+  const updatedUser = await axios.put(`http://localhost:3001/users/${id}`, body, config);
+  console.log();
+  console.log();
+  console.log(updatedUser);
+  console.log();
+  console.log(updatedUser.data.username, 'has been successfully updated');
+  console.log();
+  console.log();
+  return await afterLogin(userData, admin);
 }
 
 
@@ -171,8 +294,8 @@ async function adminUser(userData) {
     deleteUser(userData);
   } else if (userQs.users === 'Update User') {
     updateUser(userData);
-  } else if (userQs.users === 'Search One User') {
-    getOneUser(userData);
+  } else if (userQs.users === 'Get One User') {
+    await getOneUser(userData);
   }
 }
 
