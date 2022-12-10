@@ -242,8 +242,6 @@ async function deleteVehicle(userData, category) {
 
 async function performLogin(loginData) {
   try {
-
-
     const url = 'http://localhost:3001/signin';
     const data = await axios.post(url, {}, {
       auth: {
@@ -282,9 +280,9 @@ async function afterLogin(userData, rolePermissions) {
         },
       ]);
     if (nextStepsAdmin.choice === 'Exit') {
-      return;
+      return startScript();
     } else if (nextStepsAdmin.choice === 'Access User Data') {
-      adminUser(userData);
+      await adminUser(userData);
     } else if (nextStepsAdmin.choice === 'Access Truck Data') {
       await crudStuff(rolePermissions, userData, 'truck');
     } else if (nextStepsAdmin.choice === 'Access Car Data') {
@@ -493,7 +491,7 @@ async function adminUser(userData) {
     ]);
 
   if (userQs.users === 'Exit') {
-    return;
+    await afterLogin(userData, admin);
   } else if (userQs.users === 'Get Users') {
     await getUsers(userData);
   } else if (userQs.users === 'Delete User') {
@@ -535,6 +533,7 @@ async function startScript() {
 
     const userDataResponse = await performLogin(loginData);
 
+    if (!userDataResponse) return;
     const userData = {
       vehicleType: userDataResponse.data.vehicleType,
       role: userDataResponse.data.role,
@@ -575,6 +574,7 @@ async function startScript() {
 
     const userDataResponse = await performSignup(loginData);
 
+    if (!userDataResponse) return;
     const userData = {
       vehicleType: userDataResponse.data.vehicleType,
       role: userDataResponse.data.role,
