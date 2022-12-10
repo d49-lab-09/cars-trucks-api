@@ -1,8 +1,8 @@
 'use strict';
 const axios = require('axios');
 const inquirer = require('inquirer');
-
-
+require('dotenv').config();
+const SERVER_URL = process.env.SERVER_URL;
 const admin = ['create', 'get one', 'get all', 'update', 'delete', 'exit'];
 const user = ['get one', 'get all', 'update', 'create', 'exit'];
 const guest = ['get one', 'get all', 'exit'];
@@ -36,7 +36,7 @@ async function crudStuff(rolePermissions, userData, carsOrTrucks = '') {
         if (userData.role === 'admin') {
           return await afterLogin(userData, rolePermissions);
         } else {
-          return;
+          return startScript();
         }
       }
 
@@ -100,7 +100,7 @@ async function createVehicle(userData, category) {
     model: newData.model,
     type: category,
   };
-  const newVehicle = await axios.post(`http://localhost:3001/${category}s`, body, config);
+  const newVehicle = await axios.post(`${SERVER_URL}${category}s`, body, config);
 
   console.log(newVehicle.data);
 
@@ -114,7 +114,7 @@ async function getVehicle(userData, category, getOne = false, rolePermissions) {
   const config = {
     headers: { Authorization: `Bearer ${token}` },
   };
-  const data = await axios.get(`http://localhost:3001/${category}s`, config);
+  const data = await axios.get(`${SERVER_URL}${category}s`, config);
   if (!getOne) return console.log(data.data);
   const vehicles = data.data.map(vehicle => `${vehicle.id}. Make: ${vehicle.make}
      Model: ${vehicle.model}`);
@@ -135,7 +135,7 @@ async function getVehicle(userData, category, getOne = false, rolePermissions) {
 
   const id = whichVehicle.vehicle.split('.').at(0);
 
-  const oneVehicle = await axios.get(`http://localhost:3001/${category}s/${id}`, config);
+  const oneVehicle = await axios.get(`${SERVER_URL}${category}s/${id}`, config);
   console.log(oneVehicle.data);
 }
 
@@ -146,7 +146,7 @@ async function updateVehicle(userData, category) {
   const config = {
     headers: { Authorization: `Bearer ${token}` },
   };
-  const data = await axios.get(`http://localhost:3001/${category}s`, config);
+  const data = await axios.get(`${SERVER_URL}${category}s`, config);
 
   const vehicles = data.data.map(vehicle => `${vehicle.id}. Make: ${vehicle.make}
      Model: ${vehicle.model}`);
@@ -187,7 +187,7 @@ async function updateVehicle(userData, category) {
     model: newData.model,
     type: category,
   };
-  const updatedVehicle = await axios.put(`http://localhost:3001/${category}s/${id}`, body, config);
+  const updatedVehicle = await axios.put(`${SERVER_URL}${category}s/${id}`, body, config);
 
   console.log(updatedVehicle.data);
 }
@@ -198,7 +198,7 @@ async function deleteVehicle(userData, category) {
   const config = {
     headers: { Authorization: `Bearer ${token}` },
   };
-  const data = await axios.get(`http://localhost:3001/${category}s`, config);
+  const data = await axios.get(`${SERVER_URL}${category}s`, config);
 
   const vehicles = data.data.map(vehicle => `${vehicle.id}. Make: ${vehicle.make}
      Model: ${vehicle.model}`);
@@ -233,7 +233,7 @@ async function deleteVehicle(userData, category) {
 
   if (confirm.confirm === 'no') return await deleteVehicle(userData, category);
 
-  const status = await axios.delete(`http://localhost:3001/${category}s/${id}`, config);
+  const status = await axios.delete(`${SERVER_URL}${category}s/${id}`, config);
   console.log();
   console.log();
   console.log();
@@ -242,7 +242,7 @@ async function deleteVehicle(userData, category) {
 
 async function performLogin(loginData) {
   try {
-    const url = 'http://localhost:3001/signin';
+    const url = `${SERVER_URL}signin`;
     const data = await axios.post(url, {}, {
       auth: {
         username: loginData.username,
@@ -257,7 +257,7 @@ async function performLogin(loginData) {
 }
 
 async function performSignup(loginData) {
-  const url = 'http://localhost:3001/signup';
+  const url = `${SERVER_URL}signup`;
   const data = await axios.post(url, {
     username: loginData.username,
     password: loginData.password,
@@ -300,7 +300,7 @@ async function getUsers(userData) {
     headers: { Authorization: `Bearer ${token}` },
   };
 
-  const data = await axios.get('http://localhost:3001/users', config);
+  const data = await axios.get(`${SERVER_URL}users`, config);
   console.log(data.data);
   adminUser(userData);
 }
@@ -310,7 +310,7 @@ async function getOneUser(userData) {
   const config = {
     headers: { Authorization: `Bearer ${token}` },
   };
-  const data = await axios.get('http://localhost:3001/users', config);
+  const data = await axios.get(`${SERVER_URL}users`, config);
   const userIds = data.data.map(users => ({
     [users.username]: users.id,
   }));
@@ -333,7 +333,7 @@ async function getOneUser(userData) {
   }
   const [id] = Object.values(foundUser[0]);
 
-  const gotOne = await axios.get(`http://localhost:3001/users/${id}`, config);
+  const gotOne = await axios.get(`${SERVER_URL}users/${id}`, config);
   console.log();
   console.log();
   console.log(gotOne.data);
@@ -347,7 +347,7 @@ async function deleteUser(userData) {
     headers: { Authorization: `Bearer ${token}` },
   };
 
-  const data = await axios.get('http://localhost:3001/users', config);
+  const data = await axios.get(`${SERVER_URL}users`, config);
   const userNames = data.data.map(users => users.username);
   const userIds = data.data.map(users => ({
     [users.username]: users.id,
@@ -378,7 +378,7 @@ async function deleteUser(userData) {
 
   if (confirm.confirm === 'no') return await deleteUser(userData);
 
-  const status = await axios.delete(`http://localhost:3001/users/${id}`, config);
+  const status = await axios.delete(`${SERVER_URL}users/${id}`, config);
   console.log();
   console.log();
   console.log(status.data.status);
@@ -396,7 +396,7 @@ async function updateUser(userData) {
     headers: { Authorization: `Bearer ${token}` },
   };
 
-  const data = await axios.get('http://localhost:3001/users', config);
+  const data = await axios.get(`${SERVER_URL}users`, config);
   const userNames = data.data.map(users => users.username);
   const userIds = data.data.map(users => ({
     [users.username]: users.id,
@@ -438,7 +438,7 @@ async function updateUser(userData) {
     },
     ]);
 
-  const updatedUser = await axios.put(`http://localhost:3001/users/${id}`, body, config);
+  const updatedUser = await axios.put(`${SERVER_URL}users/${id}`, body, config);
   console.log();
   console.log();
   console.log(updatedUser);
