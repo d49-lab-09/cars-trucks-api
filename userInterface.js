@@ -31,7 +31,7 @@ async function crudStuff(rolePermissions, userData, carsOrTrucks = '') {
             choices: ['yes', 'no'],
           },
         ]);
-      if (continueCrud.continue === 'no') { break; }
+      if (continueCrud.continue === 'no') { return await afterLogin(userData, rolePermissions); }
 
 
       const pickCrud = await inquirer
@@ -53,7 +53,8 @@ async function crudStuff(rolePermissions, userData, carsOrTrucks = '') {
       } else if (pickCrud.pickCrud === 'delete') {
         console.log('you chose delete');
       } else if (pickCrud.pickCrud === 'read all') {
-        getVehicle(userData);
+        await getVehicle(userData, category);
+        return await afterLogin(userData, rolePermissions);
       } else {
         break;
       }
@@ -66,36 +67,14 @@ async function crudStuff(rolePermissions, userData, carsOrTrucks = '') {
 
 
 
-async function getVehicle(userData) {
-  let { token, vehicleType } = userData;
-
-  const config = {
-    headers: { Authorization: `Bearer ${token}` },
-  };
-  const data = await axios.get(`http://localhost:3001/${vehicleType}s`, config);
-  console.log(data);
-}
-
-
-async function getCars(userData) {
+async function getVehicle(userData, category) {
   const { token } = userData;
 
   const config = {
     headers: { Authorization: `Bearer ${token}` },
   };
-  const data = await axios.get('http://localhost:3001/cars', config);
-  console.log(data);
-}
-
-async function getTrucks(userData) {
-  const { token } = userData;
-
-  const config = {
-    headers: { Authorization: `Bearer ${token}` },
-  };
-
-  const data = await axios.get('http://localhost:3001/trucks', config);
-  console.log(data);
+  const data = await axios.get(`http://localhost:3001/${category}s`, config);
+  console.log(data.data);
 }
 
 
@@ -117,7 +96,7 @@ async function performSignup(loginData) {
     password: loginData.password,
     vehicleType: loginData.vehicleType.toLowerCase(),
   });
-  console.log(data);
+  console.log(data.data);
   return data;
 }
 
@@ -155,7 +134,7 @@ async function getUsers(userData) {
   };
 
   const data = await axios.get('http://localhost:3001/users', config);
-  console.log(data);
+  console.log(data.data);
   adminUser(userData);
 }
 
