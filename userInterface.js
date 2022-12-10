@@ -52,14 +52,14 @@ async function crudStuff(rolePermissions, userData, carsOrTrucks = '') {
         ]);
 
       if (pickCrud.pickCrud === 'create') {
-        console.log('you chose create');
+        await createVehicle(userData, category);
       } else if (pickCrud.pickCrud === 'get one') {
         await getVehicle(userData, category, true, rolePermissions);
         return await afterLogin(userData, rolePermissions);
       } else if (pickCrud.pickCrud === 'update') {
-        await updateVehicle(userData, category, rolePermissions);
+        await updateVehicle(userData, category);
       } else if (pickCrud.pickCrud === 'delete') {
-        console.log('you chose delete');
+        await deleteVehicle(userData, category);
       } else if (pickCrud.pickCrud === 'get all') {
         await getVehicle(userData, category, false, rolePermissions);
         return await afterLogin(userData, rolePermissions);
@@ -73,6 +73,39 @@ async function crudStuff(rolePermissions, userData, carsOrTrucks = '') {
   }
 }
 
+
+async function createVehicle(userData, category) {
+  const { token } = userData;
+
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
+
+  const newData = await inquirer
+    .prompt([
+      {
+        type: 'input',
+        name: 'make',
+        message: 'Please input a "make" for the vehicle',
+      },
+      {
+        type: 'input',
+        name: 'model',
+        message: 'Please input a new "model" for the vehicle',
+      },
+    ]);
+
+  const body = {
+    make: newData.make,
+    model: newData.model,
+    type: category,
+  };
+  const newVehicle = await axios.post(`http://localhost:3001/${category}s`, body, config);
+
+  console.log(newVehicle.data);
+
+
+}
 
 
 async function getVehicle(userData, category, getOne = false, rolePermissions) {
@@ -157,6 +190,54 @@ async function updateVehicle(userData, category) {
   const updatedVehicle = await axios.put(`http://localhost:3001/${category}s/${id}`, body, config);
 
   console.log(updatedVehicle.data);
+}
+
+async function deleteVehicle(userData, category) {
+  const { token } = userData;
+
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
+  const data = await axios.get(`http://localhost:3001/${category}s`, config);
+
+  const vehicles = data.data.map(vehicle => `${vehicle.id}. Make: ${vehicle.make}
+     Model: ${vehicle.model}`);
+
+  vehicles.push('exit');
+  const whichVehicle = await inquirer
+    .prompt([
+      {
+        type: 'list',
+        name: `vehicle`,
+        message: 'Which vehicle would you like to delete?',
+        choices: vehicles,
+      },
+    ]);
+
+
+  if (whichVehicle.vehicle === 'exit') return;
+
+
+
+
+  const id = whichVehicle.vehicle.split('.').at(0);
+  console.log();
+
+  const confirm = await inquirer
+    .prompt([{
+      type: 'list',
+      name: 'confirm',
+      message: `Are you sure you want to delete ${whichVehicle.vehicle}?`,
+      choices: ['no', 'yes'],
+    }]);
+
+  if (confirm.confirm === 'no') return await deleteVehicle(userData, category);
+
+  const status = await axios.delete(`http://localhost:3001/${category}s/${id}`, config);
+  console.log();
+  console.log();
+  console.log();
+  console.log(whichVehicle.vehicle, 'has been successfully deleted');
 }
 
 async function performLogin(loginData) {
