@@ -241,15 +241,21 @@ async function deleteVehicle(userData, category) {
 }
 
 async function performLogin(loginData) {
+  try {
 
-  const url = 'http://localhost:3001/signin';
-  const data = await axios.post(url, {}, {
-    auth: {
-      username: loginData.username,
-      password: loginData.password,
-    },
-  });
-  return data;
+
+    const url = 'http://localhost:3001/signin';
+    const data = await axios.post(url, {}, {
+      auth: {
+        username: loginData.username,
+        password: loginData.password,
+      },
+    });
+    return data;
+  } catch (e) {
+    console.log(e.message);
+    return startScript();
+  }
 }
 
 async function performSignup(loginData) {
@@ -510,6 +516,7 @@ async function startScript() {
       },
     ]);
   if (loginQuestion.start === 'Exit') {
+    console.log('Exiting');
     return;
   } else if (loginQuestion.start === 'Login') {
     const loginData = await inquirer
