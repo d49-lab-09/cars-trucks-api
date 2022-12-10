@@ -67,7 +67,7 @@ async function update(req, res, next) {
 async function destroy(req, res, next) {
   try {
     const id = req.params.id;
-    await users.destroy({ where: id });
+    await users.destroy({ where: { id } });
     res.status(204).send();
   } catch (e) {
     next(e.message);
@@ -78,7 +78,8 @@ async function destroy(req, res, next) {
 
 async function readOne(req, res, next) {
   try {
-    const oneUser = await users.read(req.params.id);
+    const id = req.params.id;
+    const oneUser = await users.findOne({ where: { id } });
     res.status(200).send(oneUser);
   } catch (e) {
     next(e.message);

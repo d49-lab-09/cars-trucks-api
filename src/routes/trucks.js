@@ -4,17 +4,17 @@ const express = require('express');
 const { trucks } = require('../models');
 const bearAuth = require('../middleware/auth/bearer');
 const truckChecker = require('../middleware/auth/truckMiddleware');
-
+const acl = require('../middleware/auth/acl');
 const trucksRouter = express.Router();
 
 
 trucksRouter.route('/trucks')
-  .post(bearAuth, truckChecker, create)
-  .get(bearAuth, truckChecker, read);
+  .post(bearAuth, truckChecker, acl('create'), create)
+  .get(bearAuth, truckChecker, acl('read'), read);
 trucksRouter.route('/trucks/:id')
-  .put(bearAuth, truckChecker, update)
-  .delete(bearAuth, truckChecker, destroy)
-  .get(bearAuth, truckChecker, readOne);
+  .put(bearAuth, truckChecker, acl('update'), update)
+  .delete(bearAuth, truckChecker, acl('delete'), destroy)
+  .get(bearAuth, truckChecker, acl('read'), readOne);
 
 async function read(req, res) {
   const allTrucks = await trucks.read();
