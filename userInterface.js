@@ -198,9 +198,18 @@ async function deleteUser(userData) {
   if (userToDelete.user === 'Exit') return await afterLogin(userData, admin);
   const foundUser = userIds.filter(user => {
     return Object.keys(user)[0] === userToDelete.user;
-
   });
   const [id] = Object.values(foundUser[0]);
+
+  const confirm = await inquirer
+    .prompt([{
+      type: 'list',
+      name: 'confirm',
+      message: `Are you sure you want to delete ${userToDelete.user}?`,
+      choices: ['no', 'yes'],
+    }]);
+
+  if (confirm.confirm === 'no') return await deleteUser(userData);
 
   const status = await axios.delete(`http://localhost:3001/users/${id}`, config);
   console.log();
