@@ -15,43 +15,50 @@ We would like to view cars or trucks depending on user preference. If a user pre
 
 ### Setup
 
-#### `.env` requirements (where applicable)
+`npm i` to install dependencies
+`nodemon` to start server on port 3001
+`node userInterface.js` to run a command line interface for full CRUD interaction.
+
+#### `.env` requirements
 
 see `.env.sample`
 
 #### How to initialize/run your application (where applicable)
 
 - nodemon
+  `node userInterface.js` to run a command line interface for full CRUD interaction.
 
 #### Features / Routes
 
 - Feature one: Deploy to Prod
 
-- GET : `/` - specific route to hit
+- GET : `/` - goes to a 404
 
 - `/signin` : POST - login as user
 - `/signup` : POST - create one user
 - `/users` : GET - Read all usernames
-- `/users` : GET - Read all usernames
-- `/users` : GET - Read all usernames
+- `/users/:id` : PUT - Update user
+- `/users/:id` : DELETE - Delete user
 - `/cars` : GET - Read all cars
+- `/cars/:id` : GET - Read one car
 - `/trucks` : GET - Read all trucks
-- `/cars` : POST - Create one cars
-- `/trucks` : POST - Create one trucks
-- `/cars/:id` : PUT - Update one cars
-- `/trucks/:id` : PUT - Update one trucks
-- `/cars/:id` : DELETE - Delete one cars
-- `/trucks/:id` : DELETE - Delete one trucks
+- `/trucks:/id` : GET - Read one truck
+- `/cars` : POST - Create one car
+- `/trucks` : POST - Create one truck
+- `/cars/:id` : PUT - Update one car
+- `/trucks/:id` : PUT - Update one truck
+- `/cars/:id` : DELETE - Delete one car
+- `/trucks/:id` : DELETE - Delete one truck
 
 #### Tests
 
 - How do you run tests?
   - npm test
 - Any tests of note?
-  - handles root path
-  - handles invalid paths
+
   - handles every CRUD function
-- Describe any tests that you did not complete, skipped, etc
+  - handles middleware
+  - handles database calls
 
 #### UML
 
