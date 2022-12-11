@@ -5,15 +5,15 @@ const { cars } = require('../models');
 const bearAuth = require('../middleware/auth/bearer');
 const carChecker = require('../middleware/auth/carMiddleware');
 const carsRouter = express.Router();
-
+const acl = require('../middleware/auth/acl');
 
 carsRouter.route('/cars')
-  .post(bearAuth, carChecker, create)
-  .get(bearAuth, carChecker, read);
+  .post(bearAuth, carChecker, acl('create'), create)
+  .get(bearAuth, carChecker, acl('read'), read);
 carsRouter.route('/cars/:id')
-  .put(bearAuth, carChecker, update)
-  .delete(bearAuth, carChecker, destroy)
-  .get(bearAuth, carChecker, readOne);
+  .put(bearAuth, carChecker, acl('update'), update)
+  .delete(bearAuth, carChecker, acl('delete'), destroy)
+  .get(bearAuth, carChecker, acl('read'), readOne);
 
 async function read(req, res, next) {
 
