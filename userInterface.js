@@ -263,7 +263,7 @@ async function performSignup(loginData) {
     password: loginData.password,
     vehicleType: loginData.vehicleType.toLowerCase(),
   });
-  console.log(data.data);
+
   return data;
 }
 
