@@ -233,7 +233,7 @@ async function deleteVehicle(userData, category) {
 
   if (confirm.confirm === 'no') return await deleteVehicle(userData, category);
 
-  const status = await axios.delete(`${SERVER_URL}${category}s/${id}`, config);
+  await axios.delete(`${SERVER_URL}${category}s/${id}`, config);
   console.log();
   console.log();
   console.log();
