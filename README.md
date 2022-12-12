@@ -1,12 +1,19 @@
 # LAB - 401-D49 Lab-09
 
-## Project: auth-api
+## Project: Truck-Car API
 
 ### Author: Lewis Benson, Hunter Fehr
 
 ### Problem Domain
 
-We would like to view cars or trucks depending on user preference. If a user prefers cars, they will gain access to a list of cars. If a user prefers trucks they will gain access to a list of trucks.
+There are two types of people in the world, those who like cars and those who like trucks.
+A car lover would like to read, add, and update their favorite cars into a database so that they could be viewed at the users convenience.
+A truck lover would also like to read, add, and update their favorite trucks.
+A car lover does not want to see trucks, and a truck lover will not want to see cars.
+A user can make API calls to our server to perform the following tasks:
+- Signup to be a truck or car user
+- Create, view, and update favorite car/trucks
+- Admins can create, view, update, delete, users, cars, and trucks
 
 ### Links and Resources
 
@@ -63,4 +70,3 @@ see `.env.sample`
 #### UML
 
 ![UML](./assets/uml.png)
-Link to an image of the UML for your application and response to events
